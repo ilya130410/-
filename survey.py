@@ -11,39 +11,36 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-
 def similar(a, b):
     """Вычисляет схожесть двух строк"""
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
-
 
 def check_answer(user_answer, correct_answer, threshold=0.5):
     """Проверяет ответ на схожесть с правильным"""
     if not user_answer or not user_answer.strip():
         return False
-
+    
     # Очистка текста
     user_clean = re.sub(r'[^\w\s]', '', user_answer.lower().strip())
     correct_clean = re.sub(r'[^\w\s]', '', correct_answer.lower().strip())
-
+    
     if not user_clean:
         return False
-
+    
     # Проверка точного совпадения
     if user_clean == correct_clean:
         return True
-
+    
     # Проверка на ключевые слова (для длинных ответов)
     keywords = [word for word in correct_clean.split() if len(word) > 3]
     if keywords:
         found_keywords = sum(1 for word in keywords if word in user_clean)
         if found_keywords >= max(1, len(keywords) * 0.5):
             return True
-
+    
     # Проверка схожести
     similarity = similar(user_clean, correct_clean)
     return similarity >= threshold
-
 
 # Все 60 вопросов ДОСЛОВНО из фото
 questions = [
@@ -55,7 +52,7 @@ questions = [
     },
     {
         "question": "Какой крупный город Красноярского края является центром лесной промышленности?",
-        "answer": "Лесосибирск",
+        "answer": "Лесосибирск", 
         "category": "Города"
     },
     {
@@ -148,7 +145,7 @@ questions = [
         "answer": "Красноярский завод холодильников «Бирюса»",
         "category": "Промышленность"
     },
-
+    
     # Вопросы 21-40 из следующих фото
     {
         "question": "Какие профессии популярны среди мастеров народных гармонистов в северных районах?",
@@ -250,7 +247,7 @@ questions = [
         "answer": "Красноярский экономический форум",
         "category": "Экономика"
     },
-
+    
     # Вопросы 41-60 из оставшихся фото
     {
         "question": "Назови одну из редких профессий, популярную на севере Красноярского края и связанную с животными.",
@@ -303,7 +300,7 @@ questions = [
         "category": "История"
     },
     {
-        "question": "В 1921 году была создана Енисейская губернская грамчека. Как расшифровывалась грамчека?",
+        "question": "В 1921 году была создана Енисейская губернская грамочка. Как расшифровывалась грамочка?",
         "answer": "Чрезвычайная комиссия по ликвидации безграмотности",
         "category": "Образование"
     },
@@ -354,69 +351,59 @@ questions = [
     }
 ]
 
-
 def main():
     st.title("🎯 Викторина: Красноярский край - 60 вопросов")
     st.markdown("---")
-
+    
     # Инструкция для постоянного доступа
     st.sidebar.title("🌐 Постоянный доступ")
     st.sidebar.markdown("""
     **Для запуска на Streamlit Cloud:**
-
+    
     1. Сохраните этот код как `app.py`
     2. Загрузите на GitHub
     3. Зайдите на [streamlit.io](https://streamlit.io)
     4. Подключите репозиторий
     5. Получите постоянную ссылку!
-
+    
     **📱 Доступно:**
     - 24/7 из любой точки мира
     - На телефонах и компьютерах
     - Без установки
     - Бесплатно
     """)
-
+    
     # Настройки теста
     st.sidebar.markdown("---")
     st.sidebar.title("⚙️ Настройки")
-
+    
     sensitivity = st.sidebar.slider(
-        "Строгость проверки ответов",
-        min_value=0.3,
-        max_value=0.8,
+        "Строгость проверки ответов", 
+        min_value=0.3, 
+        max_value=0.8, 
         value=0.5,
         help="Чем ниже значение, тем проще принимаются ответы с ошибками"
     )
-
-    question_count = st.sidebar.slider(
-        "Количество вопросов в тесте",
-        min_value=10,
-        max_value=len(questions),
-        value=min(30, len(questions)),
-        help="Выберите сколько вопросов будет в тесте"
-    )
-
+    
     show_categories = st.sidebar.checkbox("Показывать категории вопросов", value=True)
-
+    
     # Информация о тесте
     st.sidebar.markdown("---")
     st.sidebar.title("ℹ️ О тесте")
     st.sidebar.info(f"""
     **Всего вопросов:** {len(questions)}
-    **В этом тесте:** {question_count}
     **Проверка:** Приблизительная ✅
     **Доступ:** Глобальный 24/7 🌍
-    **Время:** 20-40 минут
+    **Время:** 45-60 минут
     """)
-
+    
     # Инициализация состояния сессии
     if 'current_questions' not in st.session_state:
-        st.session_state.current_questions = random.sample(questions, question_count)
+        st.session_state.current_questions = questions.copy()
     if 'current_index' not in st.session_state:
         st.session_state.current_index = 0
     if 'user_answers' not in st.session_state:
-        st.session_state.user_answers = [""] * question_count
+        st.session_state.user_answers = [""] * len(questions)
     if 'show_results' not in st.session_state:
         st.session_state.show_results = False
     if 'score' not in st.session_state:
@@ -424,14 +411,14 @@ def main():
     if 'test_started' not in st.session_state:
         st.session_state.test_started = False
     if 'answer_checked' not in st.session_state:
-        st.session_state.answer_checked = [False] * question_count
-
+        st.session_state.answer_checked = [False] * len(questions)
+    
     # Стартовая страница
     if not st.session_state.test_started:
         st.header("🌍 Добро пожаловать в викторину о Красноярском крае!")
-
+        
         col1, col2 = st.columns([2, 1])
-
+        
         with col1:
             st.markdown(f"""
             ### 📚 О викторине:
@@ -440,19 +427,17 @@ def main():
             - **Разные категории:** география, промышленность, образование, история
             - **Приблизительные ответы** - не нужно писать идеально
             - **Постоянный доступ** - работает 24/7 из любой страны
-
+            
             ### 🎯 Как отвечать:
             - **Можно с ошибками:** "Норильск" вместо "Норильск"
             - **Можно кратко:** "СФУ" вместо "Сибирский федеральный университет"  
             - **Можно своими словами:** "Добыча угля" вместо "Горнодобывающая промышленность"
             - **Главное - передать основной смысл!**
-
+            
             ### ⏱️ Примерное время:
-            - 10 вопросов: 10-15 минут
-            - 30 вопросов: 25-35 минут  
-            - 60 вопросов: 45-60 минут
+            - **60 вопросов:** 45-60 минут
             """)
-
+        
         with col2:
             st.success("""
             **✅ Принимаются:**
@@ -461,13 +446,13 @@ def main():
             - Разные формулировки
             - Сокращения
             """)
-
+            
             st.warning("""
             **💡 Совет:**
             Не тратьте время на идеальное
             написание - пишите как помните!
             """)
-
+            
             st.info("""
             **🏆 Система оценок:**
             - 90-100%: Отлично 🏅
@@ -475,48 +460,48 @@ def main():
             - 50-69%: Удовлетворительно 😊
             - <50%: Попробуйте еще раз 📚
             """)
-
+        
         if st.button("🚀 Начать викторину", type="primary", use_container_width=True):
             st.session_state.test_started = True
             st.rerun()
-
+            
         # Инструкция по размещению
         st.markdown("---")
         st.subheader("📡 Как сделать тест доступным 24/7")
-
+        
         with st.expander("🔄 Инструкция по размещению на Streamlit Cloud"):
             st.markdown("""
             **1. Сохраните код:**
             - Скопируйте этот код
             - Сохраните как `app.py`
-
+            
             **2. Загрузите на GitHub:**
             - Создайте репозиторий
             - Загрузите `app.py`
-
+            
             **3. Разместите на Streamlit Cloud:**
             - Зайдите на [streamlit.io/cloud](https://streamlit.io/cloud)
             - Нажмите "New app"
             - Выберите репозиторий
             - Укажите `app.py` как главный файл
             - Нажмите "Deploy"
-
+            
             **4. Получите ссылку:**
             - Приложение получит постоянный URL
             - Пример: `https://your-app-name.streamlit.app`
             - Эта ссылка будет работать всегда!
             """)
-
+            
         return
-
+    
     # Основной интерфейс теста
     current_questions = st.session_state.current_questions
     current_q = current_questions[st.session_state.current_index]
-
+    
     # Прогресс
     progress = (st.session_state.current_index + 1) / len(current_questions)
     st.progress(progress)
-
+    
     # Заголовок с информацией
     col1, col2, col3 = st.columns([2, 1, 1])
     with col1:
@@ -529,11 +514,11 @@ def main():
             st.success("✓ Проверено")
         else:
             st.warning("✗ Не проверено")
-
+    
     if not st.session_state.show_results:
         # Вопрос
         st.subheader(f"❓ {current_q['question']}")
-
+        
         # Поле для ответа
         user_answer = st.text_area(
             "✏️ Ваш ответ:",
@@ -542,12 +527,12 @@ def main():
             placeholder="Введите ваш ответ здесь... (можно с ошибками и своими словами)",
             key=f"answer_{st.session_state.current_index}"
         )
-
+        
         st.session_state.user_answers[st.session_state.current_index] = user_answer
-
+        
         # Кнопки проверки
         col1, col2 = st.columns([1, 1])
-
+        
         with col1:
             if st.button("🔍 Проверить этот ответ", use_container_width=True):
                 if user_answer.strip():
@@ -559,37 +544,34 @@ def main():
                         st.error("❌ Ответ не принят. Попробуйте другую формулировку.")
                 else:
                     st.warning("⚠️ Введите ответ для проверки")
-
+        
         with col2:
             if st.button("👁️ Показать правильный ответ", use_container_width=True):
                 st.info(f"**Правильный ответ:** {current_q['answer']}")
-
+        
         # Навигация
         st.markdown("---")
         col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
-
+        
         with col1:
             if st.session_state.current_index > 0:
                 if st.button("⬅️ Назад", use_container_width=True):
                     st.session_state.current_index -= 1
                     st.rerun()
-
+        
         with col2:
-            if st.button("🔄 Новый тест", use_container_width=True):
-                st.session_state.current_questions = random.sample(questions, question_count)
+            if st.button("🔄 Перемешать вопросы", use_container_width=True):
+                random.shuffle(st.session_state.current_questions)
                 st.session_state.current_index = 0
-                st.session_state.user_answers = [""] * question_count
-                st.session_state.answer_checked = [False] * question_count
-                st.session_state.score = 0
-                st.success("Тест обновлен! Начинаем заново.")
+                st.success("Вопросы перемешаны!")
                 st.rerun()
-
+        
         with col3:
             if st.session_state.current_index < len(current_questions) - 1:
                 if st.button("Далее ➡️", use_container_width=True):
                     st.session_state.current_index += 1
                     st.rerun()
-
+        
         with col4:
             if st.button("✅ Завершить тест", type="primary", use_container_width=True):
                 st.session_state.show_results = True
@@ -599,32 +581,28 @@ def main():
                     if check_answer(st.session_state.user_answers[i], q["answer"], sensitivity)
                 )
                 st.rerun()
-
+        
         # Статистика прогресса
         checked_count = sum(st.session_state.answer_checked)
         st.write(f"**Прогресс: {checked_count}/{len(current_questions)} вопросов проверено**")
-
+    
     else:
         # Страница результатов
         st.header("🎉 Результаты теста")
-
+        
         percentage = (st.session_state.score / len(current_questions)) * 100
-
+        
         # Оценка результата
         if percentage >= 90:
-            st.success(
-                f"🏆 Отлично! Вы ответили правильно на {st.session_state.score} из {len(current_questions)} вопросов!")
+            st.success(f"🏆 Отлично! Вы ответили правильно на {st.session_state.score} из {len(current_questions)} вопросов!")
             st.balloons()
         elif percentage >= 70:
-            st.success(
-                f"👍 Хорошо! Вы ответили правильно на {st.session_state.score} из {len(current_questions)} вопросов!")
+            st.success(f"👍 Хорошо! Вы ответили правильно на {st.session_state.score} из {len(current_questions)} вопросов!")
         elif percentage >= 50:
-            st.warning(
-                f"😊 Удовлетворительно! Вы ответили правильно на {st.session_state.score} из {len(current_questions)} вопросов!")
+            st.warning(f"😊 Удовлетворительно! Вы ответили правильно на {st.session_state.score} из {len(current_questions)} вопросов!")
         else:
-            st.error(
-                f"📚 Нужно повторить материал! Вы ответили правильно на {st.session_state.score} из {len(current_questions)} вопросов.")
-
+            st.error(f"📚 Нужно повторить материал! Вы ответили правильно на {st.session_state.score} из {len(current_questions)} вопросов.")
+        
         # Визуализация результатов
         col1, col2 = st.columns([2, 1])
         with col1:
@@ -640,32 +618,32 @@ def main():
             else:
                 grade = "2 (Неудовлетворительно)"
             st.metric("Оценка", grade)
-
+        
         # Детализация ответов
         st.subheader("📋 Детализация по вопросам:")
-
+        
         for i, q in enumerate(current_questions):
-            with st.expander(f"Вопрос {i + 1}: {q['question'][:80]}...", expanded=False):
+            with st.expander(f"Вопрос {i+1}: {q['question'][:80]}...", expanded=False):
                 user_ans = st.session_state.user_answers[i]
                 correct_ans = q["answer"]
                 is_correct = check_answer(user_ans, correct_ans, sensitivity)
-
+                
                 col1, col2 = st.columns([3, 1])
                 with col1:
                     if is_correct:
                         st.success("✅ Ответ засчитан")
                     else:
                         st.error("❌ Ответ не засчитан")
-
+                    
                     st.write(f"**Ваш ответ:** {user_ans if user_ans else 'Нет ответа'}")
                     st.write(f"**Правильный ответ:** {correct_ans}")
                     st.write(f"**Категория:** {q['category']}")
-
+                
                 with col2:
                     if user_ans.strip():
                         similarity = similar(user_ans, correct_ans) * 100
                         st.metric("Схожесть", f"{similarity:.1f}%")
-
+        
         # Итоговая статистика
         st.subheader("📊 Итоговая статистика")
         col1, col2, col3, col4 = st.columns(4)
@@ -677,7 +655,7 @@ def main():
             st.metric("Неправильные ответы", len(current_questions) - st.session_state.score)
         with col4:
             st.metric("Процент успеха", f"{percentage:.1f}%")
-
+        
         # Кнопки действий после теста
         st.markdown("---")
         col1, col2 = st.columns([1, 1])
@@ -687,15 +665,15 @@ def main():
                     del st.session_state[key]
                 st.rerun()
         with col2:
-            if st.button("📝 Новый набор вопросов", use_container_width=True):
+            if st.button("🔀 Начать с новыми вопросами", use_container_width=True):
                 st.session_state.show_results = False
-                st.session_state.current_questions = random.sample(questions, question_count)
+                st.session_state.current_questions = questions.copy()
+                random.shuffle(st.session_state.current_questions)
                 st.session_state.current_index = 0
-                st.session_state.user_answers = [""] * question_count
-                st.session_state.answer_checked = [False] * question_count
+                st.session_state.user_answers = [""] * len(questions)
+                st.session_state.answer_checked = [False] * len(questions)
                 st.session_state.score = 0
                 st.rerun()
-
 
 if __name__ == "__main__":
     main()
